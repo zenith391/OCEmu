@@ -1,13 +1,6 @@
 OCEmu - OpenComputers Emulator
 ==============================
 
-# Features added compared to original
-* 95% - (Optional) Filesystem size limitation
-* 100% - Paste with mouse wheel
-* TODO- Debugger mode. Useful for coding OSes
-* TODO- Profiler
-* TODO- Automatic unit tests
-
 Installation
 ------------
 
@@ -19,7 +12,7 @@ This git repository contains submodules, please clone using `git clone --recursi
 
 **Windows**
 
-Binaries: [Windows 32bit](http://gamax92.pc-logix.com/ocemu/OCEmu-x32.zip) and [Windows 64bit](http://gamax92.pc-logix.com/ocemu/OCEmu-x64.zip) [(Build Date)](http://gamax92.pc-logix.com/ocemu/builddate.txt)
+Binaries: [Windows 32bit](https://gamax92.keybase.pub/ocemu/OCEmu-x32.zip) and [Windows 64bit](https://gamax92.keybase.pub/ocemu/OCEmu-x64.zip) [(Build Date)](https://gamax92.keybase.pub/ocemu/builddate.txt)
 
 The binaries above have everything pre compiled and packed up for ease of use.
 
@@ -95,6 +88,3 @@ If you want to use a custom path (for example, for running multiple machines wit
 cd src
 lua boot.lua /path/to/my/emulated/machine_a
 ```
-
-## The fork on itself
-The fork on itself is a update of the, now to seem, not working on project by gamax92. In this fork i'm going to try to fix all known bugs and to verify and add existing pull requests, and also treat issues on my own.

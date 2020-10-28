@@ -504,6 +504,25 @@ function cec.fill(x1, y1, w, h, char) -- Fills a portion of the screen at the sp
 	end
 	return true
 end
+function cec.bitblt(buf, col, row, w, h, fromCol, fromRow)
+	cprint("(cec) screen.bitblt", tostring(buf), col, row, w, h, fromCol, fromRow)
+	local oldFg = srcfgc
+	local oldBg = srcbgc
+	for y=0, h-1 do
+		for x=0, w-1 do
+			local char, fg, bg = buf:bufferGet(x+fromCol, y+fromRow)
+			local dx = x+col
+			local dy = y+row
+			if dx >= 1 and dx <= width and dy >= 1 and dy <= height then
+				srcfgc = fg
+				srcbgc = bg
+				setPos(dx, dy, utf8.byte(char), fg, bg)
+			end
+		end
+	end
+	srcfgc = oldFg
+	srcbgc = oldBg
+end
 function cec.getResolution() -- Get the current screen resolution.
 	cprint("(cec) screen.getResolution")
 	return width, height
