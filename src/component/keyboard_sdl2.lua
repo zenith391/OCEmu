@@ -76,5 +76,12 @@ local mai = {}
 -- Such methods
 local obj = {type="keyboard"}
 
+local di = {
+	class = "input",
+	description = "Keyboard",
+	vendor = "MightyPirates GmbH & Co. KG",
+	product = "Fancytyper MX-Stone"
+}
+
 -- Wow
-return obj,nil,mai
+return obj,nil,mai,di

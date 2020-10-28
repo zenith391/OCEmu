@@ -46,6 +46,15 @@ end
 local readCosts = {1/1, 1/4, 1/7, 1/10, 1/13, 1/15}
 local seekCosts = {1/1, 1/4, 1/7, 1/10, 1/13, 1/15}
 local writeCosts = {1/1, 1/2, 1/3, 1/4, 1/5, 1/6}
+local di = {
+	class = "volume",
+	description = "Filesystem",
+	vendor = "MightyPirates GmbH & Co. KG",
+	product = "MPFS.21.6",
+	capacity = tostring(size * 1.024),
+	size = tostring(size),
+	clock = ((2000 / readCosts[speed]) / 100) .. "/" .. ((2000 / seekCosts[speed]) / 100) .. "/" .. ((2000 / writeCosts[speed]) / 100)
+}
 
 -- filesystem component
 local mai = {}
@@ -336,4 +345,4 @@ function obj.isDirectory(path)
 	return elsa.filesystem.isDirectory(directory .. "/" .. path)
 end
 
-return obj,nil,mai
+return obj,nil,mai,di

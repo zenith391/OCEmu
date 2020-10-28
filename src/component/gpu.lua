@@ -21,6 +21,17 @@ local bitbltCost = 0.5 * math.pow(2, maxtier)
 -- gpu component
 local mai = {}
 local obj = {}
+local di = {
+	class = "display",
+	description = "Graphics controller",
+	vendor = "MightyPirates GmbH & Co. KG",
+	product = "MPG" .. (maxtier*1000) .. " GTZ",
+	capacity = maxwidth*maxheight,
+	width = tostring(depthTbl[maxtier]),
+	clock = ((2000 / setBackgroundCosts[maxtier]) / 100) .. "/" .. ((2000 / setForegroundCosts[maxtier]) / 100)
+	        .. "/" .. ((2000 / setPaletteColorCosts[maxtier]) / 100) .. "/" .. ((2000 / setCosts[maxtier]) / 100)
+	        .. "/" .. ((2000 / copyCosts[maxtier]) / 100) .. "/" .. ((2000 / fillCosts[maxtier]) / 100)
+}
 
 local activeBufferIdx = 0 -- 0 = screen
 local buffers = {}
@@ -534,4 +545,4 @@ function obj.copy(x, y, width, height, tx, ty)
 	return component.cecinvoke(bindaddress, "copy", x, y, width, height, tx, ty)
 end
 
-return obj,nil,mai
+return obj,nil,mai,di

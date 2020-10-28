@@ -4,6 +4,12 @@ compCheckArg(1,tier,"number")
 -- data component
 local mai = {}
 local obj = {}
+local di = {
+	class = "processor",
+	description = "Data processor card",
+	vendor = "S.C. Ltd.",
+	product = "SC01D H45h3r"
+}
 
 mai.crc32 = {direct = true, doc = "function(data:string):string -- Computes CRC-32 hash of the data. Result is binary data."}
 function obj.crc32(data)
@@ -102,4 +108,4 @@ end
 end -- tier >= 3
 end -- tier >= 2
 
-return obj,nil,mai
+return obj,nil,mai,di

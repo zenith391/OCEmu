@@ -28,6 +28,16 @@ modem_host = {}
 -- modem component
 local mai = {}
 local obj = {}
+local di = {
+	class = "network",
+	description = (wireless and "Wireless ethernet controller") or "Ethernet controller",
+	vendor = "MightyPirates GmbH & Co. KG",
+	product = (wireless and "62i230 (MPW-01)") or "42i520 (MPN-01)",
+	version = (wireless and "2.0") or "1.0",
+	capacity = tostring(settings.maxNetworkPacketSize),
+	size = 65536, -- ports aren't limited in OCEmu yet
+	width = math.huge -- neither are packet parts limited
+}
 
 -- Modem cards communicate on a real backend port
 modem_host.comms_port = 61234
@@ -530,4 +540,4 @@ function obj.broadcast(port, ...)
 	return true
 end
 
-return obj,nil,mai
+return obj,nil,mai,di

@@ -19,6 +19,12 @@ local javaserialize = require("support.serialization").javaserialize
 
 local mai = {}
 local obj = {}
+local di = {
+	class = "communication",
+	description = "Internet modem",
+	vendor = "MightyPirates GmbH & Co. KG",
+	product = "SuperLink X-D4NK"
+}
 
 local function checkUri(address, port)
 	local parsed = url.parse(address)
@@ -266,4 +272,4 @@ function obj.request(url, postData, headers)
 	return fakesocket
 end
 
-return obj,nil,mai
+return obj,nil,mai,di

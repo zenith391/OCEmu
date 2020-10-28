@@ -28,6 +28,16 @@ local writeSectorCosts = {1/5, 1/10, 1/15, 1/20, 1/25, 1/30}
 local readByteCosts = {1/48, 1/64, 1/80, 1/96, 1/112, 1/128}
 local writeByteCosts = {1/24, 1/32, 1/40, 1/48, 1/56, 1/64}
 
+local di = {
+	class = "disk",
+	description = "Hard disk drive",
+	vendor = "MightyPirates GmbH & Co. KG",
+	product = "MPD" .. (capacity/1024) .. "L" .. platterCount,
+	capacity = tostring(capacity*1.024),
+	size = tostring(capacity),
+	clock = ((2000 / readSectorCosts[speed]) / 100) .. "/" .. ((2000 / writeSectorCosts[speed]) / 100) .. "/" .. ((2000 / readByteCosts[speed]) / 100)  .. "/" .. ((2000 / writeByteCosts[speed]) / 100)
+}
+
 local function save()
 	local file = elsa.filesystem.newFile(savePath, "w")
 	file:write(data)
@@ -179,4 +189,4 @@ function obj.writeByte(offset, value)
     save()
 end
 
-return obj, nil, mai
+return obj, nil, mai, di

@@ -16,6 +16,15 @@ local data = ""
 local label = "EEPROM"
 local readonly = false
 
+local di = {
+	class = "memory",
+	description = "EEPROM",
+	vendor = "MightyPirates GmbH & Co. KG",
+	product = "FlashStick2k",
+	capacity = tostring(settings.eepromSize),
+	size = tostring(settings.eepromSize)
+}
+
 local function persistfile(fname, data)
 	local ok, err = elsa.filesystem.write(directory .. "/" .. fname, data)
 	if not ok then
@@ -165,4 +174,4 @@ function obj.makeReadonly(checksum) -- Make this EEPROM readonly if it isn't alr
 	return true
 end
 
-return obj,nil,mai
+return obj,nil,mai,di

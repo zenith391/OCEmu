@@ -24,6 +24,7 @@ local proxylist = {}
 local slotlist = {}
 local emuicc = {}
 local mailist = {}
+local dilist = {}
 
 component = {}
 
@@ -48,7 +49,7 @@ function component.connect(info, ...)
 	if not fn then
 		return nil, err
 	end
-	local proxy, cec, mai = fn(table.unpack(info, 2, info.n))
+	local proxy, cec, mai, di = fn(table.unpack(info, 2, info.n))
 	if not proxy then
 		return nil, cec or "no component added"
 	end
@@ -67,6 +68,7 @@ function component.connect(info, ...)
 	proxylist[address] = proxy
 	emuicc[address] = cec
 	mailist[address] = mai
+	dilist[address] = di
 	slotlist[address] = info[3]
 	if boot_machine then
 		table.insert(machine.signals,{"component_added",address,proxy.type})
@@ -82,9 +84,13 @@ function component.disconnect(address)
 	proxylist[address] = nil
 	emuicc[address] = nil
 	mailist[address] = nil
+	dilist[address] = nil
 	slotlist[address] = nil
 	table.insert(machine.signals,{"component_removed",address,thetype})
 	return true
+end
+function component.deviceInfo(address)
+	return dilist[address]
 end
 function component.exists(address)
 	checkArg(1,address,"string")

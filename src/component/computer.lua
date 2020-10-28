@@ -40,8 +40,12 @@ end
 
 mai.getDeviceInfo = {direct = true, doc = "function():table -- Collect information on all connected devices."}
 function obj.getDeviceInfo()
-	--STUB
 	cprint("computer.getDeviceInfo")
+	local info = {}
+	for address, _ in component.list() do
+		info[address] = component.deviceInfo(address)
+	end
+	return info
 end
 
 mai.getProgramLocations = {doc = "function():table -- Returns a list of available programs and their install disks."}
