@@ -22,11 +22,11 @@ curl -L https://github.com/Alexpux/MINGW-packages/raw/541d0da31a4d2e648689655e49
 curl -L https://github.com/Alexpux/MINGW-packages/raw/541d0da31a4d2e648689655e49ddfffbe7ff5dfe/mingw-w64-lua/lua.pc -o lua.pc
 curl -L https://github.com/Alexpux/MINGW-packages/raw/541d0da31a4d2e648689655e49ddfffbe7ff5dfe/mingw-w64-lua/searchpath.patch -o searchpath.patch
 makepkg-mingw
-if [ ! -e mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.xz ]; then
+if [ ! -e mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.zst ]; then
 	echo "Failed to build lua"
 	exit 1
 fi
-pacman --noconfirm -U mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.xz
+pacman --noconfirm -U mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.zst
 cd ..
 rm -r mingw-w64-lua
 if [ -e src/extras ]; then
@@ -121,11 +121,28 @@ mv ffi.dll ..
 cd ..
 rm -r luaffifb
 git clone -b v3.0-rc1 --depth=1 https://github.com/diegonehab/luasocket.git
+
 if [ ! -e luasocket ]; then
 	echo "Failed to download luasocket"
 	exit 1
 fi
 cd luasocket
+cd src
+cat << 'EOF' > makefile.patch
+--- makefileOLD 2020-11-14 09:17:45.892001600 +0100
++++ makefile    2020-11-14 09:20:57.252003000 +0100
+@@ -161,7 +161,7 @@
+ SO_mingw=dll
+ O_mingw=o
+ CC_mingw=gcc
+-DEF_mingw= -DLUASOCKET_INET_PTON -DLUASOCKET_$(DEBUG) -DLUA_$(COMPAT)_MODULE \
++DEF_mingw= -DLUASOCKET_$(DEBUG) -DLUA_$(COMPAT)_MODULE \
+ 	-DWINVER=0x0501 -DLUASOCKET_API='__declspec(dllexport)' \
+ 	-DMIME_API='__declspec(dllexport)'
+ CFLAGS_mingw= -I$(LUAINC) $(DEF) -pedantic -Wall -O2 -fno-common \
+EOF
+patch < makefile.patch
+cd ..
 LUALIB_mingw=-llua LUAV=5.2 make mingw
 if [ ! -e src/mime.dll.1.0.3 ]; then
 	echo "Failed to build luasocket"
@@ -134,7 +151,7 @@ fi
 prefix=../.. PLAT=mingw CDIR_mingw= LDIR_mingw= make install
 cd ..
 rm -r luasocket
-git clone -b luasec-0.5 --depth=1 https://github.com/brunoos/luasec.git
+git clone -b master https://github.com/brunoos/luasec.git
 if [ ! -e luasec ]; then
 	echo "Failed to download luasec"
 	exit 1
@@ -154,9 +171,9 @@ cat << 'EOF' > luasec_mingw.patch
 @@ -1 +1 @@
 -CMOD=ssl.so
 +CMOD=ssl.dll
-@@ -53 +53 @@
--	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
-+	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -llua -lws2_32
+@@ -55 +55 @@
+-	$(CCLD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
++	$(CCLD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS) -llua -lws2_32
 EOF
 patch -p0 < luasec_mingw.patch
 INC_PATH= LD=gcc CC=gcc make linux
