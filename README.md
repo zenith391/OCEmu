@@ -8,7 +8,7 @@ Needs lua-5.2, luafilesystem, luautf8, luaffi, and SDL2.
 luasocket is optional but is required for the Internet Component and higher precision timing.  
 luasec is optional but is required for HTTPS.
 
-This git repository contains submodules, please clone using `git clone --recursive https://github.com/gamax92/OCEmu.git`
+This git repository contains submodules, please clone using `git clone --recursive https://github.com/zenith391/OCEmu.git`
 
 ### Windows
 
