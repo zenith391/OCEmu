@@ -202,9 +202,15 @@ x86_64)
 	cp /mingw64/bin/libwinpthread-1.dll .
 	cp /mingw64/bin/libeay32.dll .
 	cp /mingw64/bin/ssleay32.dll .
-	cp /mingw64/bin/SDL2.dll .
 	;;
 esac
+mkdir SDL2-devel
+cd SDL2-devel
+wget https://www.libsdl.org/release/SDL2-devel-2.0.5-mingw.tar.gz
+tar -xf SDL2-devel-2.0.5-mingw.tar.gz
+cp SDL2-2.0.5/${MACHINE_TYPE}-w64-mingw32/bin/SDL2.dll ..
+cd ..
+rm -rf SDL2-devel
 strip -s OCEmu.exe *.dll extras/*.dll extras/*/core.dll
 date '+%Y%m%d%H%M%S' > builddate.txt
 cd ..
