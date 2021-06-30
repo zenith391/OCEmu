@@ -210,20 +210,6 @@ end
 local env = {
 	_VERSION = "Lua 5.2",
 	assert = assert,
-	bit32 = {
-		arshift = bit32.arshift,
-		band = bit32.band,
-		bnot = bit32.bnot,
-		bor = bit32.bor,
-		btest = bit32.btest,
-		bxor = bit32.bxor,
-		extract = bit32.extract,
-		lrotate = bit32.lrotate,
-		lshift = bit32.lshift,
-		replace = bit32.replace,
-		rrotate = bit32.rrotate,
-		rshift = bit32.rshift,
-	},
 	collectgarbage = collectgarbage,
 	coroutine = {
 		create = function(...)
@@ -359,6 +345,7 @@ local env = {
 	type = type,
 	xpcall = xpcall,
 }
+
 if _VERSION == "Lua 5.3" then
 	env._VERSION = "Lua 5.3"
 	env.coroutine.isyieldable = coroutine.isyieldable
@@ -375,7 +362,23 @@ if _VERSION == "Lua 5.3" then
 	for k,v in pairs(utf8) do
 		env.utf8[k] = v
 	end
+else
+	env.bit32 = {
+		arshift = bit32.arshift,
+		band = bit32.band,
+		bnot = bit32.bnot,
+		bor = bit32.bor,
+		btest = bit32.btest,
+		bxor = bit32.bxor,
+		extract = bit32.extract,
+		lrotate = bit32.lrotate,
+		lshift = bit32.lshift,
+		replace = bit32.replace,
+		rrotate = bit32.rrotate,
+		rshift = bit32.rshift,
+	}
 end
+
 setmetatable(env,{
 	__index = function(_,k)
 		cprint("Missing environment access", "env." .. k)
