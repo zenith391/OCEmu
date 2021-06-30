@@ -28,7 +28,7 @@ if [ ! -e mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.zst ]; then
 fi
 pacman --noconfirm -U mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.zst
 cd ..
-rm -r mingw-w64-lua
+rm -rf mingw-w64-lua
 if [ -e src/extras ]; then
 	read -p "src/extras already exists, remove? [y/N] " -n 1 -r
 	echo
@@ -36,7 +36,7 @@ if [ -e src/extras ]; then
 		echo "Not removing existing folder."
 		exit 1
 	fi
-	rm -r src/extras
+	rm -rf src/extras
 fi
 mkdir src/extras
 if [ ! -e src/extras ]; then
@@ -79,7 +79,7 @@ if [ ! -e src/lfs.dll ]; then
 fi
 mv src/lfs.dll ..
 cd ..
-rm -r luafilesystem
+rm -rf luafilesystem
 git clone -b 0.1.1 --depth=1 https://github.com/starwing/luautf8.git
 if [ ! -e luautf8 ]; then
 	echo "Failed to download luautf8"
@@ -94,7 +94,7 @@ if [ ! -e lua-utf8.dll ]; then
 fi
 mv lua-utf8.dll ..
 cd ..
-rm -r luautf8
+rm -rf luautf8
 git clone --depth=1 https://github.com/gamax92/luaffifb.git
 if [ ! -e luaffifb ]; then
 	echo "Failed to download luaffifb"
@@ -119,7 +119,7 @@ if [ ! -e ffi.dll ]; then
 fi
 mv ffi.dll ..
 cd ..
-rm -r luaffifb
+rm -rf luaffifb
 git clone -b v3.0-rc1 --depth=1 https://github.com/diegonehab/luasocket.git
 
 if [ ! -e luasocket ]; then
@@ -150,7 +150,7 @@ if [ ! -e src/mime.dll.1.0.3 ]; then
 fi
 prefix=../.. PLAT=mingw CDIR_mingw= LDIR_mingw= make install
 cd ..
-rm -r luasocket
+rm -rf luasocket
 git clone -b master https://github.com/brunoos/luasec.git
 if [ ! -e luasec ]; then
 	echo "Failed to download luasec"
@@ -183,7 +183,7 @@ if [ ! -e src/ssl.dll ]; then
 fi
 DESTDIR=../.. LUAPATH= LUACPATH= make install
 cd ..
-rm -r luasec
+rm -rf luasec
 cd ..
 echo "Built dependencies!"
 gcc -s -o OCEmu.exe winstub.c -Wl,--subsystem,windows -mwindows -llua

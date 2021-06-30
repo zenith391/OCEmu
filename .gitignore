@@ -8,3 +8,4 @@ log.txt
 src/*.dll
 src/OCEmu.exe
 src/builddate.txt
+.vscode/tasks.json
