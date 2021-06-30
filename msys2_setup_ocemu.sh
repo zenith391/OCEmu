@@ -202,6 +202,7 @@ x86_64)
 	cp /mingw64/bin/libwinpthread-1.dll .
 	cp /mingw64/bin/libeay32.dll .
 	cp /mingw64/bin/ssleay32.dll .
+	cp /mingw64/bin/SDL2.dll .
 	;;
 esac
 strip -s OCEmu.exe *.dll extras/*.dll extras/*/core.dll
