@@ -46,12 +46,22 @@ Follow the [luarocks step](https://github.com/zenith391/OCEmu/tree/master#lua-li
 
 ### Arch Linux
 
-Grab the Lua 5.2, luarocks5.2, lua52-filesystem, lua52-sec & lua52-socket from the official repos using Pacman.
+Grab the Lua 5.2, luarocks, lua52-filesystem, lua52-sec & lua52-socket from the official repos using Pacman.
 ```
-pacman -S lua52 luarocks5.2 lua52-filesystem lua52-sec lua52-socket
+pacman -S lua52 luarocks lua52-filesystem lua52-sec lua52-socket
 ```
-Now follow the luarocks steps below to get the remaining libraries which are not on Arch's repos.
+Then install the luarocks requirements
+```
+luarocks --lua-version 5.2 install luafilesystem
+luarocks --lua-version 5.2 install luautf8
+luarocks --lua-version 5.2 install luasocket
+luarocks --lua-version 5.2 install luasec
+cd luaffifb
+luarocks --lua-version 5.2 make
 
+# OpenComputer's lua source code is not provided, if you have svn then use the provided Makefile
+# If you hate svn, manually download assets/loot, assets/lua, and assets/font.hex into src/
+```
 
 ### Mac
 
