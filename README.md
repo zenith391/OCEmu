@@ -46,12 +46,10 @@ Follow the [luarocks step](https://github.com/zenith391/OCEmu/tree/master#lua-li
 
 ### Arch Linux
 
-Grab the Lua 5.2, luarocks5.2, lua52-filesystem, lua52-sec & lua52-socket from the official repos using Pacman.
+Here you can directly grab `ocemu-zenith` from the official repos using Pacman (thanks to [AtomicScience](https://github.com/AtomicScience))
 ```
-pacman -S lua52 luarocks5.2 lua52-filesystem lua52-sec lua52-socket
+pacman -S ocemu-zenith
 ```
-Now follow the luarocks steps below to get the remaining libraries which are not on Arch's repos.
-
 
 ### Mac
 
