@@ -97,8 +97,10 @@ function obj.allocateBuffer(width, height)
 		bufferGet = bufferGet -- exposure of API for screen_sdl2
 	}
 	usedMemory = usedMemory + size
-	table.insert(buffers, buffer)
-	return #buffers
+	local idx = 1
+	while buffers[idx] do idx = idx + 1 end
+	buffers[idx] = buffer
+	return idx
 end
 
 mai.freeBuffer = {direct = true, doc = "function(index: number): boolean -- Closes buffer at `index`. Returns true if a buffer closed. If the current buffer is closed, index moves to 0"}
@@ -110,7 +112,7 @@ function obj.freeBuffer(idx)
 		usedMemory = usedMemory - buffers[idx].size
 		buffers[idx] = nil
 		if idx == activeBufferIdx then
-			idx = 0
+			activeBufferIdx = 0
 		end
 		return true
 	end
@@ -217,7 +219,7 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 			if not machine.consumeCallBudget(cost) then return end
 			buf.dirty = false
 			width, height = math.min(buf.width, width), math.min(buf.height, height)
-			component.cecinvoke(bindaddress, "bitblt", buf, col, row, width, height, fromCol, fromRow)
+			component.cecinvoke(bindaddress, "bitblt", buf, col, row, width, height, fromRow, fromCol)
 		end
 	else
 
@@ -499,7 +501,8 @@ function obj.get(x, y)
 	if activeBufferIdx == 0 then
 		return component.cecinvoke(bindaddress, "get", x, y)
 	else
-		return bufferGet(buffers[activeBufferIdx], x, y), nil, nil
+		local char, fg, bg = bufferGet(buffers[activeBufferIdx], x, y)
+		return char, fg, bg, nil, nil
 	end
 end
 

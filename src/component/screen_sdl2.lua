@@ -516,7 +516,7 @@ function cec.bitblt(buf, col, row, w, h, fromCol, fromRow)
 			if dx >= 1 and dx <= width and dy >= 1 and dy <= height then
 				srcfgc = fg
 				srcbgc = bg
-				setPos(dx, dy, utf8.byte(char), fg, bg)
+				setPos(dx, dy, utf8.byte(char), getColor(fg, true), getColor(bg, false))
 			end
 		end
 	end
