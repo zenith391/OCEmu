@@ -45,10 +45,11 @@ sudo make install
 Follow the [luarocks step](https://github.com/zenith391/OCEmu/tree/master#lua-libraries) below.
 
 ### Arch Linux
+[Here](https://aur.archlinux.org/packages/ocemu-zenith/) you can directly grab `ocemu-zenith` and its dependencies from the AUR (thanks to [AtomicScience](https://github.com/AtomicScience)).
 
-Here you can directly grab `ocemu-zenith` from the official repos using Pacman (thanks to [AtomicScience](https://github.com/AtomicScience))
+If you use yay, here is the command:
 ```
-pacman -S ocemu-zenith
+yay -S ocemu-zenith
 ```
 
 ### Mac
