@@ -645,9 +645,12 @@ function cec.copy(x1, y1, w, h, tx, ty) -- Copies a portion of the screen from t
 	local x2 = x1+w-1
 	local y2 = y1+h-1
 	-- TODO: Not dealing with offscreen stuff yet
-	if x1 < 1 or y1 < 1 or x2 > width or y2 > height then
-		return true
-	end
+	-- As OCEmu doesn't separate setResolution and setViewport (yet) just replacing values is ok
+	if x1 < 1 then x1 = 1 end
+	if y1 < 1 then y1 = 1 end
+	if x2 > width then x2 = width; w = width - x1 + 1 end
+	if y2 > height then y2 = height; h = height - y1 + 1 end
+
 	local ty1,ty2 = y1+ty, y2+ty
 	local tx1,tx2 = x1+tx, x2+tx
 	if ty2<1 or ty1>height or tx2<1 or tx1>width then
