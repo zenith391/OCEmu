@@ -510,9 +510,12 @@ function cec.bitblt(buf, col, row, w, h, fromCol, fromRow)
 	local oldBg = srcbgc
 	for y=0, h-1 do
 		for x=0, w-1 do
-			local char, fg, bg = buf:bufferGet(x+fromCol, y+fromRow)
+			local char, fg, bg = buf:bufferGet(x+fromRow, y+fromCol)
 			local dx = x+col
 			local dy = y+row
+			if not utf8.byte(char) then
+				error(tostring(x+fromRow) .. ", " .. (y+fromCol) .. " > " .. buf.width .. ", " .. buf.height .. ": out of bounds!")
+			end
 			if dx >= 1 and dx <= width and dy >= 1 and dy <= height then
 				srcfgc = fg
 				srcbgc = bg

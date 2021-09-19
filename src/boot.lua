@@ -13,14 +13,14 @@ local sdlinit = false
 
 local arg_parse = require("support.arg_parse")
 
-local args = arg_parse(...)
+local args, options = arg_parse(...)
 local baseDir
 
 local getenv = setmetatable({}, {__index=function(t, k) local v=os.getenv(k) t[k]=v return v end})
 local paths = {}
 
-if #args > 0 then
-	table.insert(paths, args[1])
+if options.basedir then
+	table.insert(paths, options.basedir)
 elseif ffi.os == 'Windows' then
 	if getenv["HOME"] then -- Unlikely but possible thanks to the old code.
 		table.insert(paths, getenv["HOME"] .. "\\.ocemu")
@@ -160,6 +160,7 @@ local function boot()
 
 	elsa = {
 		args = args,
+		opts = options,
 		getError = function() return ffi.string(SDL.getError()) end,
 		filesystem = {
 			lines = io.lines,

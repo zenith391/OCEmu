@@ -219,7 +219,16 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 			if not machine.consumeCallBudget(cost) then return end
 			buf.dirty = false
 			width, height = math.min(buf.width, width), math.min(buf.height, height)
-			component.cecinvoke(bindaddress, "bitblt", buf, col, row, width, height, fromRow, fromCol)
+			if fromRow < 1 then
+				error("fromRow is equals to " .. fromRow .. ". Expected > 0")
+			elseif fromCol < 1 then
+				error("fromCol is equals to " .. fromCol .. ". Expected > 0")
+			elseif fromRow > buf.width then
+				error("fromRow is equals to " .. fromRow .. ". Expected <= " .. buf.width)
+			elseif fromCol > buf.height then
+				error("fromCol is equals to " .. fromCol .. ". Expected <= " .. buf.height)
+			end
+			component.cecinvoke(bindaddress, "bitblt", buf, col, row, width, height, fromCol, fromRow)
 		end
 	else
 

@@ -96,6 +96,11 @@ if settings.components == nil then
 	config.set("emulator.components",settings.components)
 end
 
+if #elsa.args > 0 and elsa.args[1] == "manage" then
+	elsa.filesystem.load("manage.lua")()
+	os.exit()
+end
+
 --[[local memoryUsages = {}
 
 local profilerHook = function(event)
@@ -404,6 +409,7 @@ elsa.filesystem.load("apis/os.lua")(env)
 elsa.filesystem.load("apis/system.lua")(env)
 elsa.filesystem.load("apis/unicode.lua")(env)
 elsa.filesystem.load("apis/userdata.lua")(env)
+elsa.filesystem.load("apis/uuid.lua")(env)
 elsa.filesystem.load("apis/component.lua")(env)
 
 config.save()
