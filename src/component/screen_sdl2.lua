@@ -412,10 +412,10 @@ function cec.getForeground() -- Get the current foreground color and whether it'
 	return scrrfc, false
 end
 function cec.setForeground(value, palette) -- Sets the foreground color to the specified value. Optionally takes an explicit palette index. Returns the old value and if it was from the palette its palette index.
-	cprint("(cec) screen.setForeground", value, palette)
 	local oldc, oldp = scrrfc, scrrfp
 	scrrfc = palette and palcol[value] or value
 	scrrfp = palette and value
+	cprint("(cec) screen.setForeground ", value, palette, " => ", string.format("0x%x", scrrfc))
 	if palette then
 		scrfgc, scrfgp = scrrfc, scrrfp
 	else
@@ -448,8 +448,9 @@ function cec.getDepth() -- Returns the currently set color depth.
 end
 function cec.setDepth(depth) -- Set the color depth. Returns the previous value.
 	cprint("(cec) screen.setDepth", depth)
+	local oldtier = tier
 	tier = math.min(depth, maxtier)
-	if tier > 1 then
+	if tier < oldtier then
 		loadPalette()
 	end
 	for y = 1,height do
@@ -581,7 +582,7 @@ function cec.getPaletteColor(index) -- Get the palette color at the specified pa
 	return palcol[index]
 end
 function cec.setPaletteColor(index, color) -- Set the palette color at the specified palette index. Returns the previous value.
-	cprint("(cec) screen.setPaletteColor", index, color)
+	cprint("(cec) screen.setPaletteColor", index, string.format("0x%x", color))
 	local old = palcol[index]
 	palcol[index] = color
 	if scrfgp == index then
