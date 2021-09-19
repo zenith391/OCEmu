@@ -207,12 +207,17 @@ end if not machine.sleep then
 end
 
 if settings.emulatorDebug then
+	local filter = ""
 	cprint = function(...)
 		local args = {}
+		local filtered = filter == ""
 		for k, v in pairs(table.pack(...)) do
 			if k ~= "n" then
 				local str = tostring(v)
 				local allowedControlCodes = { "\r", "\n", "\t" }
+				if not filtered and string.find(str, filter, 1, true) then
+					filtered = true
+				end
 				str = string.gsub(str, "[\x00-\x1F]", function(char)
 					for _, allowed in pairs(allowedControlCodes) do
 						if char == allowed then
@@ -224,7 +229,9 @@ if settings.emulatorDebug then
 				table.insert(args, str)
 			end
 		end
-		print(table.unpack(args))
+		if filtered then
+			print(table.unpack(args))
+		end
 	end
 else
 	cprint = function() end
