@@ -140,7 +140,7 @@ function obj.process()
 	--STUB
 	cprint("sound.process")
 	elsa.SDL.pauseAudioDevice(dev, 0)
-			print(elsa.SDL.getQueuedAudioSize(dev))
+	print(elsa.SDL.getQueuedAudioSize(dev))
 
 	if processEnd == 0 then
 		-- start process
@@ -166,10 +166,11 @@ mai.delay = {direct = true, doc = "function(duration:number); Instruction; Adds 
 function obj.delay(duration)
 	cprint("sound.delay", duration)
 	local delayEntry = {}
-	for _, channel in pairs(channels) do
+	for k, channel in pairs(channels) do
 		if channel.open and channel.frequency ~= 0 then
 			table.insert(delayEntry, {
 				frequency = channel.frequency,
+				id = k,
 				offset = 0
 			})
 		end
@@ -237,6 +238,75 @@ table.insert(machineTickHandlers, function(dt)
 		end
 	end
 end)
+
+-- Debugger tab
+if debuggerTabs then
+	table.insert(debuggerTabs, {
+		name = "Sound Card",
+		draw = function(g)
+			local channelHeight = 60
+			for i=1, 8 do
+				g.setColor(0, 0, 0)
+				g.drawText(0, g.y + 22, "Channel " .. i)
+				g.setColor(200, 200, 200)
+
+				if processEnd == 0 or not channels[i].open then -- not yet processing
+					g.drawLine(150, g.y + 60, 700, g.y + 60)
+					g.setColor(0, 0, 0)
+					g.drawText(0, g.y + 22 + 16, "(closed)")
+				else
+					local start = processEnd - processTime
+					local time = elsa.timer.getTime() * 1000 - start
+					local unused = true
+					for _, item in pairs(processQueue) do
+						if time >= item.tstart and time < item.tend then
+							local entry = item.entry
+							for k, channel in pairs(entry) do
+								if channel.id == i then
+									g.setColor(0, 0, 0)
+									g.drawText(0, g.y + 22 + 16, "Frequency: " .. channel.frequency .. "Hz")
+									g.setColor(200, 200, 200)
+
+									local timeFrame = 0.1 -- in seconds
+									local waveTime = 0
+									local points = {}
+									local up = false
+									while waveTime < timeFrame do
+										table.insert(points, {
+											x = 150 + math.floor(waveTime * 550 / timeFrame),
+											y = up and (g.y + 60) or g.y
+										})
+										table.insert(points, {
+											x = 150 + math.floor(waveTime * 550 / timeFrame),
+											y = up and g.y or (g.y + 60)
+										})
+										waveTime = waveTime + (1 / channel.frequency)
+										up = not up
+									end
+
+									local i = 2
+									while i < #points do
+										local prev = points[i-1]
+										local cur  = points[i  ]
+										g.drawLine(prev.x, prev.y, cur.x, cur.y)
+										i = i + 1
+									end
+									unused = false
+								end
+							end
+						end
+					end
+					if unused then
+						g.drawLine(150, g.y + 60, 700, g.y + 60)
+						g.setColor(0, 0, 0)
+						g.drawText(0, g.y + 22 + 16, "Frequency: 0Hz")
+					end
+				end
+				g.y = g.y + channelHeight + 10
+			end
+		end
+	})
+end
 
 obj.type = "sound"
 return obj,nil,mai,di

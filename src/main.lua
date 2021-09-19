@@ -103,6 +103,16 @@ if #elsa.args > 0 and elsa.args[1] == "manage" then
 	os.exit()
 end
 
+if elsa.opts.help then
+	print("Usage:")
+	print("  lua boot.lua")
+	print("    --basedir=DIRECTORY: Set base directory")
+	print("    --logfilter=FILTER: Set logging filter (only when debug is enabled in ocemu.cfg)")
+	print("    --debugger: Turn on the debugger (separate window) which can be useful for insights")
+	print("  lua boot.lua manage")
+	os.exit()
+end
+
 --[[local memoryUsages = {}
 
 local profilerHook = function(event)
@@ -209,7 +219,7 @@ end if not machine.sleep then
 end
 
 if settings.emulatorDebug then
-	local filter = "sound"
+	local filter = elsa.opts.logfilter or ""
 	cprint = function(...)
 		local args = {}
 		local filtered = filter == ""
@@ -436,6 +446,9 @@ elsa.filesystem.load("apis/os.lua")(env)
 elsa.filesystem.load("apis/system.lua")(env)
 elsa.filesystem.load("apis/unicode.lua")(env)
 elsa.filesystem.load("apis/userdata.lua")(env)
+if elsa.opts.debugger then
+	elsa.filesystem.load("apis/debugger.lua")(env)
+end
 elsa.filesystem.load("apis/uuid.lua")(env)
 elsa.filesystem.load("apis/component.lua")(env)
 
