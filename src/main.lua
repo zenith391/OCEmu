@@ -73,6 +73,8 @@ function elsa.quit()
 	config.save()
 end
 
+machineTickHandlers = {}
+
 if settings.components == nil then
 	-- Format: string:type, (string or number or nil):address, (number or nil):slot, component parameters
 	-- Read component files for parameter documentation
@@ -207,7 +209,7 @@ end if not machine.sleep then
 end
 
 if settings.emulatorDebug then
-	local filter = ""
+	local filter = "sound"
 	cprint = function(...)
 		local args = {}
 		local filtered = filter == ""
@@ -522,7 +524,12 @@ end
 
 kbdcodes = {}
 
+local lastUpdate = elsa.timer.getTime()
 function elsa.update(dt)
+	if not dt then
+		dt = elsa.timer.getTime() - lastUpdate
+	end
+	lastUpdate = elsa.timer.getTime()
 	if #kbdcodes > 0 then
 		local kbdcode = kbdcodes[1]
 		table.remove(kbdcodes,1)
@@ -530,6 +537,9 @@ function elsa.update(dt)
 	end
 	if modem_host then
 		modem_host.processPendingMessages()
+	end
+	for _, v in pairs(machineTickHandlers) do
+		v(dt)
 	end
 	machine.callBudget = maxCallBudget
 	if machine.syncfunc then
