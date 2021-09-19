@@ -189,7 +189,7 @@ function obj.setFrequency(channel, frequency)
 	channels[channel].frequency = frequency
 end
 
-local firstProc = false
+local firstProc = true
 table.insert(machineTickHandlers, function(dt)
 	if processEnd ~= 0 then
 		local timeMs = elsa.timer.getTime() * 1000
@@ -227,6 +227,8 @@ table.insert(machineTickHandlers, function(dt)
 						end
 					end
 				end
+				if value > 32000 then value = 32000 end
+				if value < -32000 then value = -32000 end
 				data[i-1] = value
 				time = time + (1 / rate)
 			end
