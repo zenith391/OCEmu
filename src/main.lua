@@ -207,7 +207,25 @@ end if not machine.sleep then
 end
 
 if settings.emulatorDebug then
-	cprint = print
+	cprint = function(...)
+		local args = {}
+		for k, v in pairs(table.pack(...)) do
+			if k ~= "n" then
+				local str = tostring(v)
+				local allowedControlCodes = { "\r", "\n", "\t" }
+				str = string.gsub(str, "[\x00-\x1F]", function(char)
+					for _, allowed in pairs(allowedControlCodes) do
+						if char == allowed then
+							return char
+						end
+					end
+					return string.format("\\x%x", string.byte(char))
+				end)
+				table.insert(args, str)
+			end
+		end
+		print(table.unpack(args))
+	end
 else
 	cprint = function() end
 end
