@@ -324,7 +324,8 @@ local function boot()
 	end
 end
 
-print(xpcall(boot,debug.traceback))
+local err = select(2, xpcall(boot,debug.traceback))
 if sdlinit then
+  if err and #err > 0 then SDL.showSimpleMessageBox(SDL.MESSAGEBOX_ERROR, "OCEmu", err, nil) end
 	SDL.quit()
 end

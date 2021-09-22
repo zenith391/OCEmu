@@ -209,7 +209,7 @@ end if not machine.sleep then
 end
 
 if settings.emulatorDebug then
-	local filter = "sound"
+	local filter = ""--"sound"
 	cprint = function(...)
 		local args = {}
 		local filtered = filter == ""
