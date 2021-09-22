@@ -13,7 +13,7 @@ This git repository contains submodules, please clone using `git clone --recursi
 ### Windows
 
 Binaries (**severely outdated**): [Windows 32bit](https://gamax92.keybase.pub/ocemu/OCEmu-x32.zip) and [Windows 64bit](https://gamax92.keybase.pub/ocemu/OCEmu-x64.zip) [(Build Date)](https://gamax92.keybase.pub/ocemu/builddate.txt)  
-New binaries: *TODO*
+New binaries: [Wind64, Lua 5.2](https://oz-craft.pickardayune.com/downloads/ocemu-win64-lua5.2.zip), *Win64 + Lua 5.3 TODO*
 
 The binaries above have everything pre compiled and packed up for ease of use.
 
