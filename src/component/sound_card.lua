@@ -202,7 +202,6 @@ local function produceSound()
 			if elsa.SDL.queueAudio(dev, data, sampleCount * 2) ~= 0 then
 				error(elsa.getError())
 			end
-			print(elsa.SDL.getQueuedAudioSize(dev))
 			firstProc = false
 		end
 	end
@@ -241,6 +240,9 @@ end
 mai.delay = {direct = true, doc = "function(duration:number); Instruction; Adds a delay of the specified duration in milliseconds, allowing sound to generate."}
 function obj.delay(duration)
 	cprint("sound.delay", duration)
+	if duration < 0 or duration > 8000 then
+		error("invalid duration")
+	end
 	local delayEntry = {}
 	for k, channel in pairs(channels) do
 		if channel.open and channel.frequency ~= 0 then
@@ -286,8 +288,10 @@ if debuggerTabs then
 			local channelHeight = 60
 			local start = processEnd - processTime
 			local time = math.floor(elsa.timer.getTime() * 1000 - start)
-			g.setColor(0, 0, 0)
-			g.drawText(0, 20, "Time (relative to buffer): " .. time .. " ms")
+			if processEnd ~= 0 then
+				g.setColor(0, 0, 0)
+				g.drawText(0, 20, "Time (relative to buffer): " .. time .. " ms")
+			end
 			for i=1, 8 do
 				g.setColor(0, 0, 0)
 				g.drawText(0, g.y + 22, "Channel " .. i)
