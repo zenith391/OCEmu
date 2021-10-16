@@ -12,8 +12,9 @@ This git repository contains submodules, please clone using `git clone --recursi
 
 ### Windows
 
-Binaries (**severely outdated**): [Windows 32bit](https://gamax92.keybase.pub/ocemu/OCEmu-x32.zip) and [Windows 64bit](https://gamax92.keybase.pub/ocemu/OCEmu-x64.zip) [(Build Date)](https://gamax92.keybase.pub/ocemu/builddate.txt)  
-New binaries: *TODO*
+New Binaries: [Windows 64bit](https://nightly.link/zenith391/OCEmu/workflows/build-win/master/OCEmu.zip)  
+
+**Severely outdated** binaries: [Windows 32bit](https://gamax92.keybase.pub/ocemu/OCEmu-x32.zip) and [Windows 64bit](https://gamax92.keybase.pub/ocemu/OCEmu-x64.zip) (built 2020-04! outdated by a year and half!)
 
 The binaries above have everything pre compiled and packed up for ease of use.
 
