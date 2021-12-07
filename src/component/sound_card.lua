@@ -29,6 +29,7 @@ for i=1, 8 do
 	channels[i] = {
 		open = false,
 		frequency = 0,
+		volume = 1,
 		adsrStartSet = false,
 		adsr = {
 			attack = 0,
@@ -103,8 +104,12 @@ end
 
 mai.setVolume = {direct = true, doc = "function(channel:number, volume:number); Instruction; Sets the volume of the channel between 0 and 1."}
 function obj.setVolume(channel, volume)
-	--STUB
 	cprint("sound.setVolume", channel, volume)
+	compCheckArg(2, volume, "number")
+	if volume < 0 or volume > 1 then
+		error("invalid volume: " .. tostring(volume))
+	end
+	channels[checkChannel(1, channel)].volume = volume
 end
 
 mai.resetEnvelope = {direct = true, doc = "function(channel:number); Instruction; Removes ADSR from the specified channel."}
@@ -184,7 +189,7 @@ local function produceSound()
 							local attack = math.max(0, math.min(1, (time*1000 - channel.adsr.start) / channel.adsr.attack))
 							local decayStart = channel.adsr.start + channel.adsr.attack
 							local decay = math.min(1, math.max(channel.adsr.sustain, 1 - ((time*1000 - decayStart) / channel.adsr.decay)))
-							local vol = 32000 / 8 * attack * decay
+							local vol = (32000 / 8 * attack * decay) * channel.volume
 							if remainder > 0.5 then
 								value = value + vol
 							else
@@ -252,6 +257,7 @@ function obj.delay(duration)
 			end
 			table.insert(delayEntry, {
 				frequency = channel.frequency,
+				volume = channel.volume,
 				id = k,
 				offset = 0,
 				adsr = {
@@ -319,7 +325,8 @@ if debuggerTabs then
 									local decayStart = channel.adsr.start + channel.adsr.attack
 									local decay = math.min(1, math.max(channel.adsr.sustain, 1 - ((time - decayStart) / channel.adsr.decay)))
 									local vol = 60 * attack * decay
-									g.drawText(0, g.y + 22 + 16 + 16, "Volume: " .. math.floor((vol/60)*100) .. "%")
+									g.drawText(0, g.y + 22 + 16 + 16, "Volume: " .. math.floor((vol/60)*100) ..
+										"% * " .. math.floor(channel.volume*100) .. "%")
 
 									while waveTime < timeFrame do
 										table.insert(points, {
