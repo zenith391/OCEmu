@@ -50,7 +50,7 @@ local function checkChannel(n, index)
 	compCheckArg(n, index, "number")
 	index = math.floor(index)
 	if index < 1 or index > 8 then
-		error("invalid channel: " .. tostring(index))
+		error("invalid channel: " .. tostring(index), 2)
 	end
 	return index
 end
@@ -107,7 +107,7 @@ function obj.setVolume(channel, volume)
 	cprint("sound.setVolume", channel, volume)
 	compCheckArg(2, volume, "number")
 	if volume < 0 or volume > 1 then
-		error("invalid volume: " .. tostring(volume))
+		error("invalid volume: " .. tostring(volume), 2)
 	end
 	channels[checkChannel(1, channel)].volume = volume
 end
@@ -226,8 +226,9 @@ function obj.process()
 		delayQueue = {}
 		delayTime = 0
 		for _, channel in pairs(channels) do
-			channel.adsrStart = -delayTime
-			channel.adsrStartSet = false
+			if not channel.adsrStart then channel.adsrStart = 0 end
+			channel.adsrStart = channel.adsrStart - processTime
+			--channel.adsrStartSet = false
 		end
 		produceSound()
 		return true
@@ -246,7 +247,7 @@ mai.delay = {direct = true, doc = "function(duration:number); Instruction; Adds 
 function obj.delay(duration)
 	cprint("sound.delay", duration)
 	if duration < 0 or duration > 8000 then
-		error("invalid duration")
+		error("invalid duration: " .. tostring(duration), 2)
 	end
 	local delayEntry = {}
 	for k, channel in pairs(channels) do
@@ -281,7 +282,8 @@ function obj.setFrequency(channel, frequency)
 	compCheckArg(2, frequency, "number")
 
 	channels[channel].frequency = frequency
-	channels[channel].adsrStart = nil
+	channels[channel].adsrStart = delayTime
+	channels[channel].adsrStartSet = true
 end
 
 table.insert(machineTickHandlers, produceSound)
