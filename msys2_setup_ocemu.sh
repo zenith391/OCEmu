@@ -217,16 +217,16 @@ i686)
 	cp /mingw32/bin/lua53.dll .
 	cp /mingw32/bin/libgcc_s_dw2-1.dll .
 	cp /mingw32/bin/libwinpthread-1.dll .
-	cp /mingw32/bin/libeay32.dll .
-	cp /mingw32/bin/ssleay32.dll .
+	cp /mingw32/bin/libcrypto-1_1.dll .
+	cp /mingw32/bin/libssl-1_1.dll .
 	cp /mingw32/bin/SDL2.dll .
 	;;
 x86_64)
 	cp /mingw64/bin/lua53.dll .
 	cp /mingw64/bin/libgcc_s_seh-1.dll .
 	cp /mingw64/bin/libwinpthread-1.dll .
-	cp /mingw64/bin/libeay32.dll .
-	cp /mingw64/bin/ssleay32.dll .
+	cp /mingw64/bin/libcrypto-1_1-x64.dll .
+	cp /mingw64/bin/libssl-1_1-x64.dll .
 	cp /mingw64/bin/SDL2.dll .
 	;;
 esac
