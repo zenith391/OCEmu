@@ -75,6 +75,8 @@ function obj.allocateBuffer(width, height)
 	cprint("gpu.allocateBuffer", width, height)
 	width = width or maxwidth
 	height = height or maxheight
+	compCheckArg(1,width,"number")
+	compCheckArg(2,height,"number")
 
 	if width <= 0 or height <= 0 then
 		return false, "invalid page dimensions: must be greater than zero"
@@ -106,6 +108,7 @@ end
 mai.freeBuffer = {direct = true, doc = "function(index: number): boolean -- Closes buffer at `index`. Returns true if a buffer closed. If the current buffer is closed, index moves to 0"}
 function obj.freeBuffer(idx)
 	cprint("gpu.freeBuffer", idx)
+	compCheckArg(1,idx,"number")
 	if not buffers[idx] then
 		return false, "no buffer at index"
 	else
@@ -144,6 +147,7 @@ end
 mai.setActiveBuffer = {direct = true, doc = "function(index: number): number -- Sets the active buffer to `index`. 1 is the first vram buffer and 0 is reserved for the screen. returns nil for invalid index (0 is always valid)"}
 function obj.setActiveBuffer(idx)
 	cprint("gpu.setActiveBuffer", idx)
+	compCheckArg(1,idx,"number")
 	if idx ~= 0 and not buffers[idx] then
 		return nil
 	else
@@ -163,6 +167,7 @@ end
 
 mai.getBufferSize = {direct = true, doc = "function(index: number): number, number -- returns the buffer size at index. Returns the screen resolution for index 0. returns nil for invalid indexes"}
 function obj.getBufferSize(idx)
+	compCheckArg(1,idx,"number")
 	if idx == 0 then
 		return obj.getResolution()
 	else
@@ -197,6 +202,15 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 	fromCol = fromCol or 1
 	fromRow = fromRow or 1
 
+	compCheckArg(1,dst,"number")
+	compCheckArg(2,col,"number")
+	compCheckArg(3,row,"number")
+	compCheckArg(4,width,"number")
+	compCheckArg(5,height,"number")
+	compCheckArg(6,src,"number")
+	compCheckArg(7,fromCol,"number")
+	compCheckArg(8,fromRow,"number")
+
 	if dst == 0 then
 		if bindaddress == nil then
 			return nil, "no screen"
@@ -220,13 +234,19 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 			buf.dirty = false
 			width, height = math.min(buf.width, width), math.min(buf.height, height)
 			if fromRow < 1 then
-				error("fromRow is equals to " .. fromRow .. ". Expected > 0")
-			elseif fromCol < 1 then
-				error("fromCol is equals to " .. fromCol .. ". Expected > 0")
+				--error("fromRow is equals to " .. fromRow .. ". Expected > 0")
+				width = width - (1 - fromRow)
+				fromRow = 1
 			elseif fromRow > buf.width then
-				error("fromRow is equals to " .. fromRow .. ". Expected <= " .. buf.width)
+				return
+			end
+
+			if fromCol < 1 then
+				--error("fromCol is equals to " .. fromCol .. ". Expected > 0")
+				height = height - (1 - fromCol)
+				fromCol = 1
 			elseif fromCol > buf.height then
-				error("fromCol is equals to " .. fromCol .. ". Expected <= " .. buf.height)
+				return
 			end
 			component.cecinvoke(bindaddress, "bitblt", buf, col, row, width, height, fromCol, fromRow)
 		end
