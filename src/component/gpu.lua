@@ -108,6 +108,7 @@ end
 mai.freeBuffer = {direct = true, doc = "function(index: number): boolean -- Closes buffer at `index`. Returns true if a buffer closed. If the current buffer is closed, index moves to 0"}
 function obj.freeBuffer(idx)
 	cprint("gpu.freeBuffer", idx)
+	idx = idx or activeBufferIdx
 	compCheckArg(1,idx,"number")
 	if not buffers[idx] then
 		return false, "no buffer at index"
@@ -167,6 +168,7 @@ end
 
 mai.getBufferSize = {direct = true, doc = "function(index: number): number, number -- returns the buffer size at index. Returns the screen resolution for index 0. returns nil for invalid indexes"}
 function obj.getBufferSize(idx)
+	idx = idx or activeBufferIdx
 	compCheckArg(1,idx,"number")
 	if idx == 0 then
 		return obj.getResolution()
@@ -205,8 +207,8 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 	compCheckArg(1,dst,"number")
 	compCheckArg(2,col,"number")
 	compCheckArg(3,row,"number")
-	compCheckArg(4,width,"number")
-	compCheckArg(5,height,"number")
+	compCheckArg(4,width,"number","nil")
+	compCheckArg(5,height,"number","nil")
 	compCheckArg(6,src,"number")
 	compCheckArg(7,fromCol,"number")
 	compCheckArg(8,fromRow,"number")
@@ -224,6 +226,7 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 		-- TODO consume call budget
 		if src == 0 then
 			-- TODO act as copy()
+			error("bitblt from screen to sreen is not implemented")
 		else
 			local buf = buffers[src]
 			if not buf then
