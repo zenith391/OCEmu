@@ -17,16 +17,17 @@ echo "Building OCEmu dependencies for $MACHINE_TYPE"
 pacman --needed --noconfirm -S mingw-w64-${MACHINE_TYPE}-toolchain winpty patch make git subversion mingw-w64-${MACHINE_TYPE}-SDL2
 mkdir mingw-w64-lua
 cd mingw-w64-lua
-curl -L https://github.com/Alexpux/MINGW-packages/raw/541d0da31a4d2e648689655e49ddfffbe7ff5dfe/mingw-w64-lua/PKGBUILD -o PKGBUILD
-curl -L https://github.com/Alexpux/MINGW-packages/raw/541d0da31a4d2e648689655e49ddfffbe7ff5dfe/mingw-w64-lua/implib.patch -o implib.patch
-curl -L https://github.com/Alexpux/MINGW-packages/raw/541d0da31a4d2e648689655e49ddfffbe7ff5dfe/mingw-w64-lua/lua.pc -o lua.pc
-curl -L https://github.com/Alexpux/MINGW-packages/raw/541d0da31a4d2e648689655e49ddfffbe7ff5dfe/mingw-w64-lua/searchpath.patch -o searchpath.patch
+curl -L https://github.com/Alexpux/MINGW-packages/raw/4e421bbc366b833e75aee092d4033cff3ed07c12/mingw-w64-lua/PKGBUILD -o PKGBUILD
+curl -L https://github.com/Alexpux/MINGW-packages/raw/4e421bbc366b833e75aee092d4033cff3ed07c12/mingw-w64-lua/implib.patch -o implib.patch
+curl -L https://github.com/Alexpux/MINGW-packages/raw/4e421bbc366b833e75aee092d4033cff3ed07c12/mingw-w64-lua/lua.pc -o lua.pc
+curl -L https://github.com/Alexpux/MINGW-packages/raw/4e421bbc366b833e75aee092d4033cff3ed07c12/mingw-w64-lua/searchpath.patch -o searchpath.patch
+curl -L https://github.com/Alexpux/MINGW-packages/raw/4e421bbc366b833e75aee092d4033cff3ed07c12/mingw-w64-lua/LICENSE -o LICENSE
 makepkg-mingw
-if [ ! -e mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.zst ]; then
+if [ ! -e mingw-w64-${MACHINE_TYPE}-lua-5.3.5-1-any.pkg.tar.zst ]; then
 	echo "Failed to build lua"
 	exit 1
 fi
-pacman --noconfirm -U mingw-w64-${MACHINE_TYPE}-lua-5.2.4-1-any.pkg.tar.zst
+pacman --noconfirm -U mingw-w64-${MACHINE_TYPE}-lua-5.3.5-1-any.pkg.tar.zst
 cd ..
 rm -rf mingw-w64-lua
 if [ -e src/extras ]; then
@@ -140,10 +141,34 @@ cat << 'EOF' > makefile.patch
  	-DWINVER=0x0501 -DLUASOCKET_API='__declspec(dllexport)' \
  	-DMIME_API='__declspec(dllexport)'
  CFLAGS_mingw= -I$(LUAINC) $(DEF) -pedantic -Wall -O2 -fno-common \
+--- luasocket.old    2021-10-16 16:02:53.771119400 +0800
++++ luasocket.c 2021-10-16 15:57:39.170043100 +0800
+@@ -64,7 +64,7 @@
+ * Skip a few arguments
+ \*-------------------------------------------------------------------------*/
+ static int global_skip(lua_State *L) {
+-    int amount = luaL_checkint(L, 1);
++    int amount = (int) luaL_checkinteger(L, 1);
+     int ret = lua_gettop(L) - amount - 1;
+     return ret >= 0 ? ret : 0;
+ }
+--- src/mime.c.old     2021-10-16 16:06:27.470985800 +0800
++++ src/mime.c   2021-10-16 16:13:45.513282600 +0800
+@@ -661,7 +661,7 @@
+ \*-------------------------------------------------------------------------*/
+ static int mime_global_eol(lua_State *L)
+ {
+-    int ctx = luaL_checkint(L, 1);
++    int ctx = (int)luaL_checkinteger(L, 1);
+     size_t isize = 0;
+     const char *input = luaL_optlstring(L, 2, NULL, &isize);
+     const char *last = input + isize;
+
+
 EOF
 patch < makefile.patch
 cd ..
-LUALIB_mingw=-llua LUAV=5.2 make mingw
+LUALIB_mingw=-llua LUAV=5.3 make mingw
 if [ ! -e src/mime.dll.1.0.3 ]; then
 	echo "Failed to build luasocket"
 	exit 1
@@ -189,19 +214,19 @@ echo "Built dependencies!"
 gcc -s -o OCEmu.exe winstub.c -Wl,--subsystem,windows -mwindows -llua
 case "$MACHINE_TYPE" in
 i686)
-	cp /mingw32/bin/lua52.dll .
+	cp /mingw32/bin/lua53.dll .
 	cp /mingw32/bin/libgcc_s_dw2-1.dll .
 	cp /mingw32/bin/libwinpthread-1.dll .
-	cp /mingw32/bin/libeay32.dll .
-	cp /mingw32/bin/ssleay32.dll .
+	cp /mingw32/bin/libcrypto-1_1.dll .
+	cp /mingw32/bin/libssl-1_1.dll .
 	cp /mingw32/bin/SDL2.dll .
 	;;
 x86_64)
-	cp /mingw64/bin/lua52.dll .
+	cp /mingw64/bin/lua53.dll .
 	cp /mingw64/bin/libgcc_s_seh-1.dll .
 	cp /mingw64/bin/libwinpthread-1.dll .
-	cp /mingw64/bin/libeay32.dll .
-	cp /mingw64/bin/ssleay32.dll .
+	cp /mingw64/bin/libcrypto-1_1-x64.dll .
+	cp /mingw64/bin/libssl-1_1-x64.dll .
 	cp /mingw64/bin/SDL2.dll .
 	;;
 esac

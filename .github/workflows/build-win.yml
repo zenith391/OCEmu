@@ -1,0 +1,33 @@
+name: Compile for Windows
+
+on:
+  push:
+    # branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    runs-on: windows-latest  # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Setup MSYS
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+
+
+    - name: Build OCEmu
+      shell: msys2 {0}
+      run: TMOUT=1 script -q -e -c "bash ./msys2_setup_ocemu.sh"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: OCEmu
+        path: src

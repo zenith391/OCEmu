@@ -412,10 +412,10 @@ function cec.getForeground() -- Get the current foreground color and whether it'
 	return scrrfc, false
 end
 function cec.setForeground(value, palette) -- Sets the foreground color to the specified value. Optionally takes an explicit palette index. Returns the old value and if it was from the palette its palette index.
-	cprint("(cec) screen.setForeground", value, palette)
 	local oldc, oldp = scrrfc, scrrfp
 	scrrfc = palette and palcol[value] or value
 	scrrfp = palette and value
+	cprint("(cec) screen.setForeground ", value, palette, " => ", string.format("0x%x", scrrfc))
 	if palette then
 		scrfgc, scrfgp = scrrfc, scrrfp
 	else
@@ -448,8 +448,9 @@ function cec.getDepth() -- Returns the currently set color depth.
 end
 function cec.setDepth(depth) -- Set the color depth. Returns the previous value.
 	cprint("(cec) screen.setDepth", depth)
+	local oldtier = tier
 	tier = math.min(depth, maxtier)
-	if tier > 1 then
+	if tier < oldtier then
 		loadPalette()
 	end
 	for y = 1,height do
@@ -510,13 +511,16 @@ function cec.bitblt(buf, col, row, w, h, fromCol, fromRow)
 	local oldBg = srcbgc
 	for y=0, h-1 do
 		for x=0, w-1 do
-			local char, fg, bg = buf:bufferGet(x+fromCol, y+fromRow)
+			local char, fg, bg = buf:bufferGet(x+fromRow, y+fromCol)
 			local dx = x+col
 			local dy = y+row
+			if not utf8.byte(char) then
+				error(tostring(x+fromRow) .. ", " .. (y+fromCol) .. " > " .. buf.width .. ", " .. buf.height .. ": out of bounds!")
+			end
 			if dx >= 1 and dx <= width and dy >= 1 and dy <= height then
 				srcfgc = fg
 				srcbgc = bg
-				setPos(dx, dy, utf8.byte(char), fg, bg)
+				setPos(dx, dy, utf8.byte(char), getColor(fg, true), getColor(bg, false))
 			end
 		end
 	end
@@ -578,7 +582,7 @@ function cec.getPaletteColor(index) -- Get the palette color at the specified pa
 	return palcol[index]
 end
 function cec.setPaletteColor(index, color) -- Set the palette color at the specified palette index. Returns the previous value.
-	cprint("(cec) screen.setPaletteColor", index, color)
+	cprint("(cec) screen.setPaletteColor", index, string.format("0x%x", color))
 	local old = palcol[index]
 	palcol[index] = color
 	if scrfgp == index then
@@ -641,9 +645,12 @@ function cec.copy(x1, y1, w, h, tx, ty) -- Copies a portion of the screen from t
 	local x2 = x1+w-1
 	local y2 = y1+h-1
 	-- TODO: Not dealing with offscreen stuff yet
-	if x1 < 1 or y1 < 1 or x2 > width or y2 > height then
-		return true
-	end
+	-- As OCEmu doesn't separate setResolution and setViewport (yet) just replacing values is ok
+	if x1 < 1 then x1 = 1 end
+	if y1 < 1 then y1 = 1 end
+	if x2 > width then x2 = width; w = width - x1 + 1 end
+	if y2 > height then y2 = height; h = height - y1 + 1 end
+
 	local ty1,ty2 = y1+ty, y2+ty
 	local tx1,tx2 = x1+tx, x2+tx
 	if ty2<1 or ty1>height or tx2<1 or tx1>width then

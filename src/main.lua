@@ -73,6 +73,8 @@ function elsa.quit()
 	config.save()
 end
 
+machineTickHandlers = {}
+
 if settings.components == nil then
 	-- Format: string:type, (string or number or nil):address, (number or nil):slot, component parameters
 	-- Read component files for parameter documentation
@@ -94,6 +96,21 @@ if settings.components == nil then
 		-- TODO: Alternatives
 	end
 	config.set("emulator.components",settings.components)
+end
+
+if #elsa.args > 0 and elsa.args[1] == "manage" then
+	elsa.filesystem.load("manage.lua")()
+	os.exit()
+end
+
+if elsa.opts.help then
+	print("Usage:")
+	print("  lua boot.lua")
+	print("    --basedir=DIRECTORY: Set base directory")
+	print("    --logfilter=FILTER: Set logging filter (only when debug is enabled in ocemu.cfg)")
+	print("    --debugger: Turn on the debugger (separate window) which can be useful for insights")
+	print("  lua boot.lua manage")
+	os.exit()
 end
 
 --[[local memoryUsages = {}
@@ -202,7 +219,32 @@ end if not machine.sleep then
 end
 
 if settings.emulatorDebug then
-	cprint = print
+	local filter = elsa.opts.logfilter or ""
+	cprint = function(...)
+		local args = {}
+		local filtered = filter == ""
+		for k, v in pairs(table.pack(...)) do
+			if k ~= "n" then
+				local str = tostring(v)
+				local allowedControlCodes = { "\r", "\n", "\t" }
+				if not filtered and string.find(str, filter, 1, true) then
+					filtered = true
+				end
+				str = string.gsub(str, "[\x00-\x1F]", function(char)
+					for _, allowed in pairs(allowedControlCodes) do
+						if char == allowed then
+							return char
+						end
+					end
+					return string.format("\\x%x", string.byte(char))
+				end)
+				table.insert(args, str)
+			end
+		end
+		if filtered then
+			print(table.unpack(args))
+		end
+	end
 else
 	cprint = function() end
 end
@@ -404,6 +446,10 @@ elsa.filesystem.load("apis/os.lua")(env)
 elsa.filesystem.load("apis/system.lua")(env)
 elsa.filesystem.load("apis/unicode.lua")(env)
 elsa.filesystem.load("apis/userdata.lua")(env)
+if elsa.opts.debugger then
+	elsa.filesystem.load("apis/debugger.lua")(env)
+end
+elsa.filesystem.load("apis/uuid.lua")(env)
 elsa.filesystem.load("apis/component.lua")(env)
 
 config.save()
@@ -491,7 +537,12 @@ end
 
 kbdcodes = {}
 
+local lastUpdate = elsa.timer.getTime()
 function elsa.update(dt)
+	if not dt then
+		dt = elsa.timer.getTime() - lastUpdate
+	end
+	lastUpdate = elsa.timer.getTime()
 	if #kbdcodes > 0 then
 		local kbdcode = kbdcodes[1]
 		table.remove(kbdcodes,1)
@@ -499,6 +550,9 @@ function elsa.update(dt)
 	end
 	if modem_host then
 		modem_host.processPendingMessages()
+	end
+	for _, v in pairs(machineTickHandlers) do
+		v(dt)
 	end
 	machine.callBudget = maxCallBudget
 	if machine.syncfunc then
