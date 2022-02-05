@@ -56,6 +56,7 @@ end
 
 -- graphics api
 local g = {}
+local selectedTab = 2
 
 function g.setColor(red, green, blue)
 	SDL.setRenderDrawColor(renderer, red, green, blue, SDL.ALPHA_OPAQUE)
@@ -154,6 +155,28 @@ local function cleanUpWindow(wind)
 	os.exit() -- todo: gracefully shutdown
 end
 
+local buttons = {[SDL.BUTTON_LEFT] = 0, [SDL.BUTTON_RIGHT] = 1}
+function elsa.mousebuttondown(event)
+	local mbevent = ffi.cast("SDL_MouseButtonEvent*", event)
+	if mbevent.windowID ~= windowID then
+		return
+	end
+	if buttons[mbevent.button] then
+		if mbevent.button == SDL.BUTTON_LEFT then
+			local x, y = mbevent.x, mbevent.y
+
+			local tx = 0
+			for k, tab in pairs(debuggerTabs) do
+				local metrics = g.getTextMetrics(tab.name)
+				if x >= tx and x < tx + metrics.width and y >= 0 and y < 16 then
+					selectedTab = k
+				end
+				tx = tx + metrics.width + 16
+			end
+		end
+	end
+end
+
 function elsa.windowclose(event)
 	if event.windowID ~= windowID then
 		return
@@ -169,7 +192,6 @@ debuggerTabs = {
 	{ name = "Profiler", draw = drawProfiler }
 }
 
-local selectedTab = 2
 local function drawTabs()
 	local x = 0
 	for k, tab in pairs(debuggerTabs) do
@@ -186,6 +208,9 @@ local function drawTabs()
 	end
 	g.y = g.y + 40
 
+	if selectedTab > #debuggerTabs then
+		selectedTab = #debuggerTabs
+	end
 	debuggerTabs[selectedTab].draw(g)
 end
 

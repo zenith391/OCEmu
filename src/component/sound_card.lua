@@ -228,7 +228,6 @@ function obj.process()
 		for _, channel in pairs(channels) do
 			if not channel.adsrStart then channel.adsrStart = 0 end
 			channel.adsrStart = channel.adsrStart - processTime
-			--channel.adsrStartSet = false
 		end
 		produceSound()
 		return true

@@ -150,7 +150,7 @@ function obj.setActiveBuffer(idx)
 	cprint("gpu.setActiveBuffer", idx)
 	compCheckArg(1,idx,"number")
 	if idx ~= 0 and not buffers[idx] then
-		return nil
+		return false, "invalid buffer index"
 	else
 		activeBufferIdx = idx
 	end
