@@ -185,7 +185,16 @@ function elsa.windowclose(event)
 end
 
 local function drawProfiler(g)
+	g.setColor(1, 1, 1)
+	g.drawText(0, g.y, #machine.signals .. " pending signals:")
+	g.y = g.y + 16
 
+	for _, signal in ipairs(machine.signals) do
+		local concat = ""
+		for _, v in ipairs(signal) do concat = concat .. v .. " " end
+		g.drawText(0, g.y, "- " .. concat)
+		g.y = g.y + 16
+	end
 end
 
 debuggerTabs = {
