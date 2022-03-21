@@ -1,7 +1,7 @@
 local address, _, tier = ...
 
 local ffi = require("ffi")
-local desired = ffi.new("SDL_AudioSpec",{freq=8000, format=elsa.SDL.AUDIO_S16, channels=1, samples=4096, callback=ffi.NULL})
+local desired = ffi.new("SDL_AudioSpec",{freq=44100, format=elsa.SDL.AUDIO_S16, channels=1, samples=2048, callback=ffi.NULL})
 local obtained = ffi.new("SDL_AudioSpec",{})
 local dev = elsa.SDL.openAudioDevice(ffi.NULL, 0, desired, obtained, 0)
 if dev == 0 then
@@ -28,7 +28,15 @@ local channels = {}
 for i=1, 8 do
 	channels[i] = {
 		open = false,
-		frequency = 0
+		frequency = 0,
+		volume = 1,
+		adsrStartSet = false,
+		adsr = {
+			attack = 0,
+			decay = 0,
+			sustain = 1.0,
+			release = 0
+		}
 	}
 end
 local di = {
@@ -42,7 +50,7 @@ local function checkChannel(n, index)
 	compCheckArg(n, index, "number")
 	index = math.floor(index)
 	if index < 1 or index > 8 then
-		error("invalid channel: " .. tostring(index))
+		error("invalid channel: " .. tostring(index), 2)
 	end
 	return index
 end
@@ -72,9 +80,14 @@ function obj.resetFM(channel)
 end
 
 mai.setADSR = {direct = true, doc = "function(channel:number, attack:number, decay:number, attenuation:number, release:number); Instruction; Assigns ADSR to the specified channel with the specified phase durations in milliseconds and attenuation between 0 and 1."}
-function obj.setADSR(channel, attack, decay, attenuation, release)
-	--STUB
-	cprint("sound.setADSR", channel, attack, decay, attenuation, release)
+function obj.setADSR(channel, attack, decay, sustain, release)
+	cprint("sound.setADSR", channel, attack, decay, sustain, release)
+	channels[checkChannel(1, channel)].adsr = {
+		attack = attack  ,
+		decay = decay,
+		sustain = sustain,
+		release = release
+	}
 end
 
 mai.setLFSR = {direct = true, doc = "function(channel:number, initial:number, mask:number); Instruction; Makes the specified channel generate LFSR noise. Functions like a wave type."}
@@ -91,14 +104,23 @@ end
 
 mai.setVolume = {direct = true, doc = "function(channel:number, volume:number); Instruction; Sets the volume of the channel between 0 and 1."}
 function obj.setVolume(channel, volume)
-	--STUB
 	cprint("sound.setVolume", channel, volume)
+	compCheckArg(2, volume, "number")
+	if volume < 0 or volume > 1 then
+		error("invalid volume: " .. tostring(volume), 2)
+	end
+	channels[checkChannel(1, channel)].volume = volume
 end
 
 mai.resetEnvelope = {direct = true, doc = "function(channel:number); Instruction; Removes ADSR from the specified channel."}
 function obj.resetEnvelope(channel)
-	--STUB
 	cprint("sound.resetEnvelope", channel)
+	channels[checkChannel(1, channel)].adsr = {
+		attack = 0,
+		decay = 0,
+		sustain = 1.0,
+		release = 0
+	}
 end
 
 mai.close = {direct = true, doc = "function(channel:number); Instruction; Closes the specified channel, stopping sound from being generated."}
@@ -135,12 +157,66 @@ end
 local processEnd = 0
 local processTime = 0
 local processQueue = {}
+local firstProc = true
+
+local function produceSound()
+	if processEnd ~= 0 then
+		local timeMs = elsa.timer.getTime() * 1000
+		if timeMs >= processEnd-- and elsa.SDL.getQueuedAudioSize(dev) == 0 then
+			then
+			processEnd = 0
+			--processQueue = {}
+			firstProc = true
+			return
+		end
+		if firstProc then
+			local datatype = ffi.typeof("int16_t[?]")
+			local rate = tonumber(obtained.freq)
+			local offset = 0
+			local duration = processTime
+
+			local time = 0
+			local sampleCount = math.floor(duration*rate/1000)
+			local data = datatype(sampleCount)
+			for i=1, sampleCount do
+				local value = 0
+				for _, item in pairs(processQueue) do
+					if time*1000 >= item.tstart and time*1000 < item.tend then
+						local entry = item.entry
+						for k, channel in pairs(entry) do
+							local step = channel.frequency / rate
+							local remainder = (time*channel.frequency) % 1
+							local attack = math.max(0, math.min(1, (time*1000 - channel.adsr.start) / channel.adsr.attack))
+							local decayStart = channel.adsr.start + channel.adsr.attack
+							local decay = math.min(1, math.max(channel.adsr.sustain, 1 - ((time*1000 - decayStart) / channel.adsr.decay)))
+							local vol = (32000 / 8 * attack * decay) * channel.volume
+							if remainder > 0.5 then
+								value = value + vol
+							else
+								value = value - vol
+							end
+							--value = value + math.floor(math.sin(time*channel.frequency) * vol)
+						end
+					end
+				end
+				if value > 32000 then value = 32000 end
+				if value < -32000 then value = -32000 end
+				data[i-1] = math.floor(value)
+				time = time + (1 / rate)
+			end
+			if elsa.SDL.queueAudio(dev, data, sampleCount * 2) ~= 0 then
+				error(elsa.getError())
+			end
+			firstProc = false
+		end
+	end
+end
+
 mai.process = {direct = true, doc = "function(); Starts processing the queue; Returns true is processing began, false if there is still a queue being processed."}
 function obj.process()
-	--STUB
 	cprint("sound.process")
 	elsa.SDL.pauseAudioDevice(dev, 0)
-			print(elsa.SDL.getQueuedAudioSize(dev))
+	--print(elsa.SDL.getQueuedAudioSize(dev))
 
 	if processEnd == 0 then
 		-- start process
@@ -149,7 +225,11 @@ function obj.process()
 		processQueue = delayQueue -- cloned
 		delayQueue = {}
 		delayTime = 0
-		print("start processing!")
+		for _, channel in pairs(channels) do
+			if not channel.adsrStart then channel.adsrStart = 0 end
+			channel.adsrStart = channel.adsrStart - processTime
+		end
+		produceSound()
 		return true
 	else
 		return false
@@ -165,12 +245,27 @@ end
 mai.delay = {direct = true, doc = "function(duration:number); Instruction; Adds a delay of the specified duration in milliseconds, allowing sound to generate."}
 function obj.delay(duration)
 	cprint("sound.delay", duration)
+	if duration < 0 or duration > 8000 then
+		error("invalid duration: " .. tostring(duration), 2)
+	end
 	local delayEntry = {}
-	for _, channel in pairs(channels) do
+	for k, channel in pairs(channels) do
 		if channel.open and channel.frequency ~= 0 then
+			if not channel.adsrStartSet or not channel.adsrStart then
+				channel.adsrStart = delayTime
+				channel.adsrStartSet = true
+			end
 			table.insert(delayEntry, {
 				frequency = channel.frequency,
-				offset = 0
+				volume = channel.volume,
+				id = k,
+				offset = 0,
+				adsr = {
+					attack = channel.adsr.attack,
+					decay = channel.adsr.decay,
+					sustain = channel.adsr.sustain,
+					start = channel.adsrStart
+				}
 			})
 		end
 	end
@@ -186,57 +281,92 @@ function obj.setFrequency(channel, frequency)
 	compCheckArg(2, frequency, "number")
 
 	channels[channel].frequency = frequency
+	channels[channel].adsrStart = delayTime
+	channels[channel].adsrStartSet = true
 end
 
-local firstProc = false
-table.insert(machineTickHandlers, function(dt)
-	if processEnd ~= 0 then
-		local timeMs = elsa.timer.getTime() * 1000
-		if timeMs >= processEnd-- and elsa.SDL.getQueuedAudioSize(dev) == 0 then
-			then
-			processEnd = 0
-			processQueue = {}
-			firstProc = true
-			return
-		end
-		if firstProc then
-			local datatype = ffi.typeof("int16_t[?]")
-			local rate = tonumber(obtained.freq)
-			local vol = 32*255
-			local offset = 0
-			local duration = processTime
+table.insert(machineTickHandlers, produceSound)
 
-			local time = 0
-			local sampleCount = math.floor(duration*rate/1000)
-			local data = datatype(sampleCount)
-			for i=1, sampleCount do
-				local value = 0
-				for _, item in pairs(processQueue) do
-					if time*1000 >= item.tstart and time*1000 < item.tend then
-						local entry = item.entry
-						for k, channel in pairs(entry) do
-							local step = channel.frequency / rate
+-- Debugger tab
+if debuggerTabs then
+	table.insert(debuggerTabs, {
+		name = "Sound Card",
+		draw = function(g)
+			local channelHeight = 60
+			local start = processEnd - processTime
+			local time = math.floor(elsa.timer.getTime() * 1000 - start)
+			if processEnd ~= 0 then
+				g.setColor(0, 0, 0)
+				g.drawText(0, 20, "Time (relative to buffer): " .. time .. " ms")
+			end
+			for i=1, 8 do
+				g.setColor(0, 0, 0)
+				g.drawText(0, g.y + 22, "Channel " .. i)
+				g.setColor(200, 200, 200)
 
-							local remainder = (time*channel.frequency) % 1
-							if remainder > 0.5 then
-								value = value + vol
-							else
-								value = value - vol
+				if processEnd == 0 or not channels[i].open then -- not yet processing
+					g.drawLine(150, g.y + 60, 700, g.y + 60)
+					g.setColor(0, 0, 0)
+					g.drawText(0, g.y + 22 + 16, "(closed)")
+				else
+					local unused = true
+					for _, item in pairs(processQueue) do
+						if time >= item.tstart and time < item.tend then
+							local entry = item.entry
+							for k, channel in pairs(entry) do
+								if channel.id == i then
+									g.setColor(0, 0, 0)
+									g.drawText(0, g.y + 22 + 16, "Frequency: " .. channel.frequency .. "Hz")
+
+									local timeFrame = 0.1 -- in seconds
+									local waveTime = 0
+									local points = {}
+									local up = false
+									local attack = math.max(0, math.min(1, (time - channel.adsr.start) / channel.adsr.attack))
+									local decayStart = channel.adsr.start + channel.adsr.attack
+									local decay = math.min(1, math.max(channel.adsr.sustain, 1 - ((time - decayStart) / channel.adsr.decay)))
+									local vol = 60 * attack * decay
+									g.drawText(0, g.y + 22 + 16 + 16, "Volume: " .. math.floor((vol/60)*100) ..
+										"% * " .. math.floor(channel.volume*100) .. "%")
+
+									while waveTime < timeFrame do
+										table.insert(points, {
+											x = 150 + math.floor(waveTime * 550 / timeFrame),
+											y = math.floor(up and (g.y + 60) or (g.y + 60 - vol))
+										})
+										table.insert(points, {
+											x = 150 + math.floor(waveTime * 550 / timeFrame),
+											y = math.floor(up and (g.y + 60 - vol) or (g.y + 60))
+										})
+										waveTime = waveTime + (1 / channel.frequency)
+										up = not up
+									end
+
+									local i = 2
+									g.setColor(200, 200, 200)
+									while i < #points do
+										local prev = points[i-1]
+										local cur  = points[i  ]
+										g.drawLine(prev.x, prev.y, cur.x, cur.y)
+										i = i + 1
+									end
+									unused = false
+								end
 							end
 						end
 					end
+					if unused then
+						g.drawLine(150, g.y + 60, 700, g.y + 60)
+						g.setColor(0, 0, 0)
+						g.drawText(0, g.y + 22 + 16, "Frequency: 0Hz")
+						g.drawText(0, g.y + 22 + 32, "Volume: 0%")
+					end
 				end
-				data[i-1] = value
-				time = time + (1 / rate)
+				g.y = g.y + channelHeight + 10
 			end
-			if elsa.SDL.queueAudio(dev, data, sampleCount * 2) ~= 0 then
-				error(elsa.getError())
-			end
-			print(elsa.SDL.getQueuedAudioSize(dev))
-			firstProc = false
 		end
-	end
-end)
+	})
+end
 
 obj.type = "sound"
 return obj,nil,mai,di

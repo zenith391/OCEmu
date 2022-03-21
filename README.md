@@ -12,8 +12,9 @@ This git repository contains submodules, please clone using `git clone --recursi
 
 ### Windows
 
-Old Binaries: [Windows 32bit](https://gamax92.keybase.pub/ocemu/OCEmu-x32.zip) and [Windows 64bit](https://gamax92.keybase.pub/ocemu/OCEmu-x64.zip) [(Build Date)](https://gamax92.keybase.pub/ocemu/builddate.txt)  
-Binaries of the fork: *TODO*
+New Binaries: [Windows 64bit](https://nightly.link/zenith391/OCEmu/workflows/build-win/master/OCEmu.zip)  
+
+**Severely outdated** binaries: [Windows 32bit](https://gamax92.keybase.pub/ocemu/OCEmu-x32.zip) and [Windows 64bit](https://gamax92.keybase.pub/ocemu/OCEmu-x64.zip) (built 2020-04! outdated by a year and half!)
 
 The binaries above have everything pre compiled and packed up for ease of use.
 
@@ -45,10 +46,29 @@ sudo make install
 Follow the [luarocks step](https://github.com/zenith391/OCEmu/tree/master#lua-libraries) below.
 
 ### Arch Linux
+[Here](https://aur.archlinux.org/packages/ocemu-zenith/) you can directly grab `ocemu-zenith` and its dependencies from the AUR (thanks to [AtomicScience](https://github.com/AtomicScience)).
 
-Here you can directly grab `ocemu-zenith` from the official repos using Pacman (thanks to [AtomicScience](https://github.com/AtomicScience))
+If you use yay, here is the command:
 ```
-pacman -S ocemu-zenith
+yay -S ocemu-zenith
+```
+
+**Manual Build**
+Grab the Lua 5.2, luarocks, lua52-filesystem, lua52-sec & lua52-socket from the official repos using Pacman.
+```
+pacman -S lua52 luarocks lua52-filesystem lua52-sec lua52-socket
+```
+Then install the luarocks requirements
+```
+luarocks --lua-version 5.2 install luafilesystem
+luarocks --lua-version 5.2 install luautf8
+luarocks --lua-version 5.2 install luasocket
+luarocks --lua-version 5.2 install luasec
+cd luaffifb
+luarocks --lua-version 5.2 make
+
+# OpenComputer's lua source code is not provided, if you have svn then use the provided Makefile
+# If you hate svn, manually download assets/loot, assets/lua, and assets/font.hex into src/
 ```
 
 ### Mac
