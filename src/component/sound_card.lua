@@ -31,6 +31,7 @@ for i=1, 8 do
 		frequency = 0,
 		volume = 1,
 		adsrStartSet = false,
+		waveType = 1, -- square wave
 		adsr = {
 			attack = 0,
 			decay = 0,
@@ -131,8 +132,12 @@ end
 
 mai.setWave = {direct = true, doc = "function(channel:number, type:number); Instruction; Sets the wave type on the specified channel."}
 function obj.setWave(channel, type)
-	--STUB
 	cprint("sound.setWave", channel, type)
+	compCheckArg(2, type, "number")
+	type = math.floor(type)
+	if type >= 1 and type <= 4 or type == -1 then
+		channels[checkChannel(1, channel)].waveType = type
+	end
 end
 
 mai.open = {direct = true, doc = "function(channel:number); Instruction; Opens the specified channel, allowing sound to be generated."}
@@ -148,16 +153,40 @@ function obj.clear()
 	delayQueue = {}
 end
 
-mai.modes = {doc = "This is a bidirectional table of all valid modes."}
+mai.modes = {doc = "This is a bidirectional table of all valid modes.", getter = true}
 function obj.modes()
-	--STUB
 	cprint("sound.modes")
+	return {
+		["noise"] = -1,
+		["square"] = 1,
+		["sine"] = 2,
+		["triangle"] = 3,
+		["sawtooth"] = 4,
+		[-1] = "noise",
+		[1] = "square",
+		[2] = "sine",
+		[3] = "triangle",
+		[4] = "sawtooth"
+	}
 end
 
 local processEnd = 0
 local processTime = 0
 local processQueue = {}
 local firstProc = true
+
+local waveFunctions = {
+	[1] = function(pos) -- square wave
+		if pos > 0.5 then
+			return 1
+		else
+			return -1
+		end
+	end,
+	[2] = function(pos) -- sine wave
+		return math.sin(2*math.pi*pos)
+	end
+}
 
 local function produceSound()
 	if processEnd ~= 0 then
@@ -184,18 +213,15 @@ local function produceSound()
 					if time*1000 >= item.tstart and time*1000 < item.tend then
 						local entry = item.entry
 						for k, channel in pairs(entry) do
+							local waveFunction = waveFunctions[channel.waveType]
 							local step = channel.frequency / rate
 							local remainder = (time*channel.frequency) % 1
 							local attack = math.max(0, math.min(1, (time*1000 - channel.adsr.start) / channel.adsr.attack))
 							local decayStart = channel.adsr.start + channel.adsr.attack
 							local decay = math.min(1, math.max(channel.adsr.sustain, 1 - ((time*1000 - decayStart) / channel.adsr.decay)))
 							local vol = (32000 / 8 * attack * decay) * channel.volume
-							if remainder > 0.5 then
-								value = value + vol
-							else
-								value = value - vol
-							end
-							--value = value + math.floor(math.sin(time*channel.frequency) * vol)
+							
+							value = value + waveFunction(remainder) * vol
 						end
 					end
 				end
@@ -236,7 +262,7 @@ function obj.process()
 	end
 end
 
-mai.channel_count = {doc = "This is the number of channels this card provides.", getter = true }
+mai.channel_count = {doc = "This is the number of channels this card provides.", getter = true}
 function obj.channel_count()
 	cprint("sound.channel_count")
 	return 8
@@ -258,6 +284,7 @@ function obj.delay(duration)
 			table.insert(delayEntry, {
 				frequency = channel.frequency,
 				volume = channel.volume,
+				waveType = channel.waveType,
 				id = k,
 				offset = 0,
 				adsr = {
@@ -329,13 +356,13 @@ if debuggerTabs then
 									g.drawText(0, g.y + 22 + 16 + 16, "Volume: " .. math.floor((vol/60)*100) ..
 										"% * " .. math.floor(channel.volume*100) .. "%")
 
-									while waveTime < timeFrame do
+									while waveTime < timeFrame * 1.1 do
 										table.insert(points, {
-											x = 150 + math.floor(waveTime * 550 / timeFrame),
+											x = 150 + math.min(550, math.floor(waveTime * 550 / timeFrame)),
 											y = math.floor(up and (g.y + 60) or (g.y + 60 - vol))
 										})
 										table.insert(points, {
-											x = 150 + math.floor(waveTime * 550 / timeFrame),
+											x = 150 + math.min(550, math.floor(waveTime * 550 / timeFrame)),
 											y = math.floor(up and (g.y + 60 - vol) or (g.y + 60))
 										})
 										waveTime = waveTime + (1 / channel.frequency)
