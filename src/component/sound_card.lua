@@ -178,13 +178,19 @@ local firstProc = true
 local waveFunctions = {
 	[1] = function(pos) -- square wave
 		if pos > 0.5 then
-			return 1
+			return 0.5
 		else
-			return -1
+			return -0.5
 		end
 	end,
 	[2] = function(pos) -- sine wave
 		return math.sin(2*math.pi*pos)
+	end,
+	[3] = function(pos) -- triangle wave
+		return 1 - (math.abs(pos - 0.5) * 4.0)
+	end,
+	[4] = function(pos) -- sawtooth wave
+		return (2 * pos) - 1
 	end
 }
 
