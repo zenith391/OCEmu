@@ -2,6 +2,7 @@ local address, _, maxwidth, maxheight, maxtier = ...
 compCheckArg(1,maxwidth,"number")
 compCheckArg(2,maxheight,"number")
 compCheckArg(3,maxtier,"number")
+-- TODO: add debugger view to visualize GPU buffers
 
 local utf8 = require("lua-utf8")
 

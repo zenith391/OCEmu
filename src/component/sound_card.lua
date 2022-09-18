@@ -363,15 +363,28 @@ if debuggerTabs then
 										"% * " .. math.floor(channel.volume*100) .. "%")
 
 									while waveTime < timeFrame * 1.1 do
-										table.insert(points, {
-											x = 150 + math.min(550, math.floor(waveTime * 550 / timeFrame)),
-											y = math.floor(up and (g.y + 60) or (g.y + 60 - vol))
-										})
-										table.insert(points, {
-											x = 150 + math.min(550, math.floor(waveTime * 550 / timeFrame)),
-											y = math.floor(up and (g.y + 60 - vol) or (g.y + 60))
-										})
-										waveTime = waveTime + (1 / channel.frequency)
+										if channel.waveType == 4 then -- sawtooth wave
+											table.insert(points, {
+												x = 150 + math.min(550, math.floor(waveTime * 550 / timeFrame)),
+												y = math.floor(g.y + 60)
+											})
+											table.insert(points, {
+												x = 150 + math.min(550, math.floor((waveTime+(2/channel.frequency)) * 550 / timeFrame)),
+												y = math.floor(g.y + 60 - vol)
+											})
+										else
+											if channel.waveType ~= 3 then -- triangle wave
+												table.insert(points, {
+													x = 150 + math.min(550, math.floor(waveTime * 550 / timeFrame)),
+													y = math.floor(up and (g.y + 60) or (g.y + 60 - vol))
+												})
+											end
+											table.insert(points, {
+												x = 150 + math.min(550, math.floor(waveTime * 550 / timeFrame)),
+												y = math.floor(up and (g.y + 60 - vol) or (g.y + 60))
+											})
+										end
+										waveTime = waveTime + (((channel.waveType == 4) and 2 or 1) / channel.frequency)
 										up = not up
 									end
 
