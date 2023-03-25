@@ -515,7 +515,8 @@ function cec.bitblt(buf, col, row, w, h, fromCol, fromRow)
 			local dx = x+col
 			local dy = y+row
 			if not utf8.byte(char) then
-				error(tostring(x+fromRow) .. ", " .. (y+fromCol) .. " > " .. buf.width .. ", " .. buf.height .. ": out of bounds!")
+				--error(tostring(x+fromRow) .. ", " .. (y+fromCol) .. " > " .. buf.width .. ", " .. buf.height .. ": out of bounds")
+				char = " "
 			end
 			if dx >= 1 and dx <= width and dy >= 1 and dy <= height then
 				srcfgc = fg

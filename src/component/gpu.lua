@@ -43,6 +43,7 @@ local function bufferSet(buf, x, y, char, fg, bg)
 	if x > buf.width or y > buf.height or x < 1 or y < 1 then
 		return false
 	end
+	x, y = math.floor(x), math.floor(y)
 	local pos = (y-1) * buf.width + x
 	fg = fg or buf.fg
 	bg = bg or buf.bg
@@ -56,6 +57,7 @@ local function bufferSet(buf, x, y, char, fg, bg)
 end
 
 local function bufferGet(buf, x, y)
+	x, y = math.floor(x), math.floor(y)
 	local pos = (y-1) * buf.width + x
 	local char = utf8.sub(buf.text, pos, pos)
 	local fg = buf.foreground[pos] or 0xFFFFFF

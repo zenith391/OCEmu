@@ -25,7 +25,8 @@ local obj = {}
 local delayTime = 0
 local delayQueue = {}
 local channels = {}
-for i=1, 8 do
+local NUM_CHANNELS = 8
+for i=1, NUM_CHANNELS do
 	channels[i] = {
 		open = false,
 		frequency = 0,
@@ -50,7 +51,7 @@ local di = {
 local function checkChannel(n, index)
 	compCheckArg(n, index, "number")
 	index = math.floor(index)
-	if index < 1 or index > 8 then
+	if index < 1 or index > NUM_CHANNELS then
 		error("invalid channel: " .. tostring(index), 2)
 	end
 	return index
@@ -225,7 +226,7 @@ local function produceSound()
 							local attack = math.max(0, math.min(1, (time*1000 - channel.adsr.start) / channel.adsr.attack))
 							local decayStart = channel.adsr.start + channel.adsr.attack
 							local decay = math.min(1, math.max(channel.adsr.sustain, 1 - ((time*1000 - decayStart) / channel.adsr.decay)))
-							local vol = (32000 / 8 * attack * decay) * channel.volume
+							local vol = (32000 / NUM_CHANNELS * attack * decay) * channel.volume
 							
 							value = value + waveFunction(remainder) * vol
 						end
@@ -271,7 +272,7 @@ end
 mai.channel_count = {doc = "This is the number of channels this card provides.", getter = true}
 function obj.channel_count()
 	cprint("sound.channel_count")
-	return 8
+	return NUM_CHANNELS
 end
 
 mai.delay = {direct = true, doc = "function(duration:number); Instruction; Adds a delay of the specified duration in milliseconds, allowing sound to generate."}
@@ -332,7 +333,7 @@ if debuggerTabs then
 				g.setColor(0, 0, 0)
 				g.drawText(0, 20, "Time (relative to buffer): " .. time .. " ms")
 			end
-			for i=1, 8 do
+			for i=1, NUM_CHANNELS do
 				g.setColor(0, 0, 0)
 				g.drawText(0, g.y + 22, "Channel " .. i)
 				g.setColor(200, 200, 200)
