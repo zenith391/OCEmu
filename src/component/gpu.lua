@@ -117,6 +117,9 @@ function obj.freeBuffer(idx)
 		return false, "no buffer at index"
 	else
 		usedMemory = usedMemory - buffers[idx].size
+		if buffers[idx].free then
+			buffers[idx]:free()
+		end
 		buffers[idx] = nil
 		if idx == activeBufferIdx then
 			activeBufferIdx = 0
@@ -237,7 +240,6 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 			end
 			local cost = determineBitbltBudgetCost(buf, "screen")
 			if not machine.consumeCallBudget(cost) then return end
-			buf.dirty = false
 			width, height = math.min(buf.width, width), math.min(buf.height, height)
 			if fromRow < 1 then
 				--error("fromRow is equals to " .. fromRow .. ". Expected > 0")
@@ -255,9 +257,10 @@ function obj.bitblt(dst, col, row, width, height, src, fromCol, fromRow)
 				return
 			end
 			component.cecinvoke(bindaddress, "bitblt", buf, col, row, width, height, fromCol, fromRow)
+			buf.dirty = false
 		end
 	else
-
+		error("TODO: bitblt from to buffer")
 	end
 end
 

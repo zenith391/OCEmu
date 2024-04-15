@@ -252,7 +252,7 @@ local function screenSet(x,y,c)
 	screen.bgp[y][x] = scrbgp
 end
 
-local function setPos(x,y,c,fg,bg)
+local function setPos(x,y,c,fg,bg,no_render)
 	local renderchange = true
     --screen.txt[y][x] ~= utf8.char(c) or 
     --screen.bg[y][x] ~= scrbgc or 
@@ -266,13 +266,17 @@ local function setPos(x,y,c,fg,bg)
 			screenSet(x,y,c)
 		end
 		if renderchange then
-			renderChar(c,(x-1)*8,(y-1)*16,fg,bg)
+			if not no_render then
+				renderChar(c,(x-1)*8,(y-1)*16,fg,bg)
+			end
 			if charWidth > 1 then
 				screenSet(x+1,y,32)
 			end
 		end
 		if renderafter then
-			renderChar(32,x*8,(y-1)*16,screen.fg[y][x+1],screen.bg[y][x+1])
+			if not no_render then
+				renderChar(32,x*8,(y-1)*16,screen.fg[y][x+1],screen.bg[y][x+1])
+			end
 		end
 	end
 end
@@ -505,28 +509,67 @@ function cec.fill(x1, y1, w, h, char) -- Fills a portion of the screen at the sp
 	end
 	return true
 end
-function cec.bitblt(buf, col, row, w, h, fromCol, fromRow)
-	cprint("(cec) screen.bitblt", tostring(buf), col, row, w, h, fromCol, fromRow)
-	local oldFg = srcfgc
-	local oldBg = srcbgc
+
+local function rerenderBuffer(buf)
+	local width, height = buf.width * 8, buf.height * 16
+	if not buf.texture then
+		buf.texture = SDL.createTexture(renderer, SDL.PIXELFORMAT_RGB888, SDL.TEXTUREACCESS_TARGET, width, height);
+		if buf.texture == ffi.NULL then
+			error(ffi.string(SDL.getError()))
+		end
+		SDL.setTextureBlendMode(buf.texture, SDL.BLENDMODE_BLEND)
+		SDL.setRenderTarget(renderer, buf.texture)
+		SDL.setRenderDrawColor(renderer, 0, 0, 0, 255)
+		SDL.renderFillRect(renderer, ffi.NULL)
+		SDL.setRenderTarget(renderer, texture)
+		buf.free = function(self)
+			SDL.destroyTexture(self.texture)
+		end
+	end
+
+	SDL.setRenderTarget(renderer, buf.texture)
+	for y=0, buf.height-1 do
+		for x=0, buf.width-1 do
+			local char, fg, bg = buf:bufferGet(x+1, y+1)
+			local dx = x+1
+			local dy = y+1
+			if not utf8.byte(char) then
+				char = " "
+			end
+			renderChar(utf8.byte(char),(dx-1)*8,(dy-1)*16,getColor(fg, true),getColor(bg, false))
+		end
+	end
+	SDL.setRenderTarget(renderer, texture)
+end
+
+function cec.bitblt(buf, col, row, w, h, fromRow, fromCol)
+	cprint("(cec) screen.bitblt", tostring(buf), col, row, w, h, fromRow, fromCol)
+	if buf.dirty then
+		rerenderBuffer(buf)
+	end
+
 	for y=0, h-1 do
 		for x=0, w-1 do
-			local char, fg, bg = buf:bufferGet(x+fromRow, y+fromCol)
+			local char, fg, bg = buf:bufferGet(x+fromCol, y+fromRow)
 			local dx = x+col
 			local dy = y+row
 			if not utf8.byte(char) then
-				--error(tostring(x+fromRow) .. ", " .. (y+fromCol) .. " > " .. buf.width .. ", " .. buf.height .. ": out of bounds")
 				char = " "
 			end
 			if dx >= 1 and dx <= width and dy >= 1 and dy <= height then
-				srcfgc = fg
-				srcbgc = bg
-				setPos(dx, dy, utf8.byte(char), getColor(fg, true), getColor(bg, false))
+				getColor(fg, true)
+				getColor(bg, false)
+				screen.txt[dy][dx] = char
+				screen.fg[dy][dx] = fg
+				screen.bg[dy][dx] = bg
+				screen.fgp[dy][dx] = scrfgp
+				screen.bgp[dy][dx] = scrbgp
 			end
 		end
 	end
-	srcfgc = oldFg
-	srcbgc = oldBg
+	local src = ffi.new("SDL_Rect", {x=(fromCol-1)*8,y=(fromRow-1)*16,w=w*8,h=h*16})
+	local dest = ffi.new("SDL_Rect",{x=(col-1)*8,y=(row-1)*16,w=w*8,h=h*16})
+	SDL.renderCopy(renderer, buf.texture, src, dest)
 end
 function cec.getResolution() -- Get the current screen resolution.
 	cprint("(cec) screen.getResolution")
